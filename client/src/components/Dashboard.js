@@ -3,8 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { DEFAULT_MAP_CENTER } from '../config';
-import { subscribeToIssues } from '../firebase';
-import { analyzeBatch, getRoadHealthStats } from '../api';
+import { analyzeBatch, getRoadHealthStats, getIssues } from '../api';
 import RecentAlerts from './RecentAlerts';
 import RoadHealthScore from './RoadHealthScore';
 import SimulateDrive from './SimulateDrive';
@@ -37,20 +36,25 @@ const Dashboard = () => {
   const [mapCenter] = useState(DEFAULT_MAP_CENTER);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Subscribe to real-time Firestore updates
+  // Fetch issues from backend API instead of Firestore direct subscription
   useEffect(() => {
-    console.log('🔥 Subscribing to Firestore updates...');
-    
-    const unsubscribe = subscribeToIssues((updatedIssues) => {
-      console.log(`📊 Received ${updatedIssues.length} issues from Firestore`);
-      setIssues(updatedIssues);
-    });
-
-    // Cleanup subscription on unmount
-    return () => {
-      console.log('🔥 Unsubscribing from Firestore');
-      unsubscribe();
+    const fetchIssues = async () => {
+      try {
+        console.log('📊 Fetching issues from backend...');
+        const response = await getIssues();
+        console.log(`✅ Received ${response.issues.length} issues from backend`);
+        setIssues(response.issues);
+      } catch (error) {
+        console.error('Error fetching issues:', error);
+        console.error('Error details:', error.response?.data || error.message);
+      }
     };
+
+    fetchIssues();
+    // Poll for updates every 10 seconds
+    const interval = setInterval(fetchIssues, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Fetch health stats periodically
@@ -58,9 +62,11 @@ const Dashboard = () => {
     const fetchStats = async () => {
       try {
         const response = await getRoadHealthStats();
+        console.log('📊 Health stats loaded:', response);
         setHealthStats(response.stats);
       } catch (error) {
         console.error('Error fetching health stats:', error);
+        console.error('Error details:', error.response?.data || error.message);
       }
     };
 
@@ -98,6 +104,7 @@ const Dashboard = () => {
       alert(`Drive simulation complete! Detected ${response.results.filter(r => r.issue).length} issues.`);
     } catch (error) {
       console.error('Error during simulate drive:', error);
+      alert(`Error processing images: ${error.message || 'Please try again'}`);
       alert('Error processing images. Please try again.');
     } finally {
       setIsProcessing(false);
