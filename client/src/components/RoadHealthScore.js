@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const RoadHealthScore = ({ stats }) => {
+const RoadHealthScore = ({ stats, issues = [], getIssueIcon, getSeverityColor }) => {
+  const [expandedSection, setExpandedSection] = useState(null);
+
   if (!stats) {
     return (
       <div className="bg-slate-800 rounded-lg border-2 border-slate-700 p-6">
@@ -13,6 +15,14 @@ const RoadHealthScore = ({ stats }) => {
       </div>
     );
   }
+
+  const toggleSection = (section) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const getIssuesByType = (type) => {
+    return issues.filter(issue => issue.issue_type === type);
+  };
 
   const getGradeColor = (grade) => {
     switch (grade) {
@@ -66,22 +76,148 @@ const RoadHealthScore = ({ stats }) => {
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-slate-700 rounded-lg p-3 text-center">
-            <div className="text-3xl mb-1">🕳️</div>
-            <div className="text-2xl font-bold text-white">{stats.potholeCount}</div>
-            <div className="text-xs text-slate-400 mt-1">Potholes</div>
+          {/* Potholes Section */}
+          <div 
+            className="bg-slate-700 rounded-lg overflow-hidden cursor-pointer hover:bg-slate-600 transition-colors"
+            onClick={() => toggleSection('pothole')}
+          >
+            <div className="p-3 text-center">
+              <div className="text-3xl mb-1">🕳️</div>
+              <div className="text-2xl font-bold text-white">{stats.potholeCount}</div>
+              <div className="text-xs text-slate-400 mt-1">Potholes</div>
+            </div>
+            {expandedSection === 'pothole' && (
+              <div className="bg-slate-800 border-t border-slate-600 p-3 max-h-64 overflow-y-auto">
+                {getIssuesByType('pothole').length > 0 ? (
+                  getIssuesByType('pothole').map((issue) => (
+                    <div 
+                      key={issue.id} 
+                      className="mb-3 pb-3 border-b border-slate-600 last:border-0 last:mb-0 last:pb-0"
+                    >
+                      <div className="flex items-start justify-between mb-1">
+                        <span className="text-xs font-semibold text-white">
+                          Report #{issue.id.slice(-6)}
+                        </span>
+                        <span 
+                          className="text-xs font-bold px-2 py-1 rounded"
+                          style={{ 
+                            backgroundColor: getSeverityColor(issue.severity),
+                            color: issue.severity >= 7 ? '#fff' : '#000'
+                          }}
+                        >
+                          {issue.severity}/10
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 mb-1">{issue.description}</p>
+                      <div className="text-xs text-slate-500">
+                        📍 {issue.lat.toFixed(5)}, {issue.lng.toFixed(5)}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        🕒 {new Date(issue.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-400 text-center py-2">No potholes detected</p>
+                )}
+              </div>
+            )}
           </div>
           
-          <div className="bg-slate-700 rounded-lg p-3 text-center">
-            <div className="text-3xl mb-1">🗑️</div>
-            <div className="text-2xl font-bold text-white">{stats.trashCount}</div>
-            <div className="text-xs text-slate-400 mt-1">Trash</div>
+          {/* Trash Section */}
+          <div 
+            className="bg-slate-700 rounded-lg overflow-hidden cursor-pointer hover:bg-slate-600 transition-colors"
+            onClick={() => toggleSection('trash')}
+          >
+            <div className="p-3 text-center">
+              <div className="text-3xl mb-1">🗑️</div>
+              <div className="text-2xl font-bold text-white">{stats.trashCount}</div>
+              <div className="text-xs text-slate-400 mt-1">Trash</div>
+            </div>
+            {expandedSection === 'trash' && (
+              <div className="bg-slate-800 border-t border-slate-600 p-3 max-h-64 overflow-y-auto">
+                {getIssuesByType('trash').length > 0 ? (
+                  getIssuesByType('trash').map((issue) => (
+                    <div 
+                      key={issue.id} 
+                      className="mb-3 pb-3 border-b border-slate-600 last:border-0 last:mb-0 last:pb-0"
+                    >
+                      <div className="flex items-start justify-between mb-1">
+                        <span className="text-xs font-semibold text-white">
+                          Report #{issue.id.slice(-6)}
+                        </span>
+                        <span 
+                          className="text-xs font-bold px-2 py-1 rounded"
+                          style={{ 
+                            backgroundColor: getSeverityColor(issue.severity),
+                            color: issue.severity >= 7 ? '#fff' : '#000'
+                          }}
+                        >
+                          {issue.severity}/10
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 mb-1">{issue.description}</p>
+                      <div className="text-xs text-slate-500">
+                        📍 {issue.lat.toFixed(5)}, {issue.lng.toFixed(5)}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        🕒 {new Date(issue.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-400 text-center py-2">No trash detected</p>
+                )}
+              </div>
+            )}
           </div>
           
-          <div className="bg-slate-700 rounded-lg p-3 text-center">
-            <div className="text-3xl mb-1">💡</div>
-            <div className="text-2xl font-bold text-white">{stats.lightCount}</div>
-            <div className="text-xs text-slate-400 mt-1">Broken Lights</div>
+          {/* Broken Lights Section */}
+          <div 
+            className="bg-slate-700 rounded-lg overflow-hidden cursor-pointer hover:bg-slate-600 transition-colors"
+            onClick={() => toggleSection('broken_light')}
+          >
+            <div className="p-3 text-center">
+              <div className="text-3xl mb-1">💡</div>
+              <div className="text-2xl font-bold text-white">{stats.lightCount}</div>
+              <div className="text-xs text-slate-400 mt-1">Broken Lights</div>
+            </div>
+            {expandedSection === 'broken_light' && (
+              <div className="bg-slate-800 border-t border-slate-600 p-3 max-h-64 overflow-y-auto">
+                {getIssuesByType('broken_light').length > 0 ? (
+                  getIssuesByType('broken_light').map((issue) => (
+                    <div 
+                      key={issue.id} 
+                      className="mb-3 pb-3 border-b border-slate-600 last:border-0 last:mb-0 last:pb-0"
+                    >
+                      <div className="flex items-start justify-between mb-1">
+                        <span className="text-xs font-semibold text-white">
+                          Report #{issue.id.slice(-6)}
+                        </span>
+                        <span 
+                          className="text-xs font-bold px-2 py-1 rounded"
+                          style={{ 
+                            backgroundColor: getSeverityColor(issue.severity),
+                            color: issue.severity >= 7 ? '#fff' : '#000'
+                          }}
+                        >
+                          {issue.severity}/10
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 mb-1">{issue.description}</p>
+                      <div className="text-xs text-slate-500">
+                        📍 {issue.lat.toFixed(5)}, {issue.lng.toFixed(5)}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        🕒 {new Date(issue.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-400 text-center py-2">No broken lights detected</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

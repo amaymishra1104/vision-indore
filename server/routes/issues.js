@@ -3,7 +3,8 @@ const router = express.Router();
 const { 
   getIssues, 
   updateIssueStatus, 
-  getRoadHealthStats 
+  getRoadHealthStats,
+  deleteIssue
 } = require('../services/firestoreService');
 
 /**
@@ -87,6 +88,28 @@ router.get('/stats/health', async (req, res) => {
     console.error('Error in GET /api/issues/stats/health:', error);
     res.status(500).json({ 
       error: error.message || 'Failed to retrieve health stats' 
+    });
+  }
+});
+
+/**
+ * DELETE /api/issues/:id
+ * Deletes a resolved issue
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await deleteIssue(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Issue resolved and deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error in DELETE /api/issues/:id:', error);
+    res.status(500).json({ 
+      error: error.message || 'Failed to delete issue' 
     });
   }
 });

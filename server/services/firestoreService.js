@@ -160,9 +160,24 @@ async function getRoadHealthStats() {
   }
 }
 
+/**
+ * Deletes an issue from Firestore
+ * @param {string} issueId - Firestore document ID
+ */
+async function deleteIssue(issueId) {
+  try {
+    await db.collection('issues').doc(issueId).delete();
+    console.log(`✅ Issue ${issueId} deleted successfully`);
+  } catch (error) {
+    console.error('❌ Error deleting issue:', error);
+    throw new Error(`Failed to delete issue: ${error.message}`);
+  }
+}
+
 module.exports = {
   saveIssue,
   getIssues,
   updateIssueStatus,
-  getRoadHealthStats
+  getRoadHealthStats,
+  deleteIssue
 };

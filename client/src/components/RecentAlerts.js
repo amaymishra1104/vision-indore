@@ -1,6 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { updateIssueStatus } from '../api';
 
 const RecentAlerts = ({ issues, getIssueIcon, getSeverityColor }) => {
+  const [updatingStatus, setUpdatingStatus] = useState({});
+
+  const handleStatusChange = async (issueId, newStatus) => {
+    setUpdatingStatus(prev => ({ ...prev, [issueId]: true }));
+    
+    try {
+      await updateIssueStatus(issueId, newStatus);
+      // Success feedback
+      console.log(`✅ Issue ${issueId} updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Failed to update status. Please try again.');
+    } finally {
+      setUpdatingStatus(prev => ({ ...prev, [issueId]: false }));
+    }
+  };
+
   return (
     <div className="bg-slate-800 rounded-lg border-2 border-slate-700">
       <div className="bg-slate-700 px-4 py-3 border-b border-slate-600">
@@ -22,19 +40,25 @@ const RecentAlerts = ({ issues, getIssueIcon, getSeverityColor }) => {
             {issues.map((issue) => (
               <div
                 key={issue.id}
-                className="bg-slate-700 rounded-lg p-3 border-l-4 hover:bg-slate-600 transition-colors cursor-pointer"
+                className={`bg-slate-700 rounded-lg p-3 border-l-4 transition-all ${
+                  issue.status === 'Resolved' ? 'opacity-60' : 'hover:bg-slate-600'
+                }`}
                 style={{ borderLeftColor: getSeverityColor(issue.severity) }}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-3">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start space-x-3 flex-1">
                     <div className="text-2xl">
-                      {getIssueIcon(issue.issue_type)}
+                      {issue.status === 'Resolved' ? '✅' : getIssueIcon(issue.issue_type)}
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold capitalize text-white">
+                      <h3 className={`font-semibold capitalize ${
+                        issue.status === 'Resolved' ? 'line-through text-slate-400' : 'text-white'
+                      }`}>
                         {issue.issue_type.replace('_', ' ')}
                       </h3>
-                      <p className="text-sm text-slate-300 mt-1">
+                      <p className={`text-sm mt-1 ${
+                        issue.status === 'Resolved' ? 'line-through text-slate-400' : 'text-slate-300'
+                      }`}>
                         {issue.description}
                       </p>
                       <div className="flex items-center space-x-3 mt-2 text-xs text-slate-400">
@@ -49,7 +73,7 @@ const RecentAlerts = ({ issues, getIssueIcon, getSeverityColor }) => {
                     </div>
                   </div>
                   <div
-                    className={`px-2 py-1 rounded text-xs font-bold ${
+                    className={`px-2 py-1 rounded text-xs font-bold whitespace-nowrap ml-2 ${
                       issue.status === 'Open' ? 'bg-red-600' :
                       issue.status === 'In Progress' ? 'bg-yellow-600' :
                       'bg-green-600'
@@ -57,6 +81,57 @@ const RecentAlerts = ({ issues, getIssueIcon, getSeverityColor }) => {
                   >
                     {issue.status}
                   </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 mt-2">
+                  {issue.status === 'Open' && (
+                    <>
+                      <button
+                        onClick={() => handleStatusChange(issue.id, 'In Progress')}
+                        disabled={updatingStatus[issue.id]}
+                        className="flex-1 px-3 py-1.5 text-xs font-semibold bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-800 text-white rounded transition-colors"
+                      >
+                        {updatingStatus[issue.id] ? '⏳ Updating...' : '🔧 Mark In Progress'}
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(issue.id, 'Resolved')}
+                        disabled={updatingStatus[issue.id]}
+                        className="flex-1 px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white rounded transition-colors"
+                      >
+                        {updatingStatus[issue.id] ? '⏳ Updating...' : '✅ Mark Resolved'}
+                      </button>
+                    </>
+                  )}
+                  
+                  {issue.status === 'In Progress' && (
+                    <>
+                      <button
+                        onClick={() => handleStatusChange(issue.id, 'Open')}
+                        disabled={updatingStatus[issue.id]}
+                        className="flex-1 px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 disabled:bg-red-800 text-white rounded transition-colors"
+                      >
+                        {updatingStatus[issue.id] ? '⏳ Updating...' : '🔙 Reopen'}
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(issue.id, 'Resolved')}
+                        disabled={updatingStatus[issue.id]}
+                        className="flex-1 px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white rounded transition-colors"
+                      >
+                        {updatingStatus[issue.id] ? '⏳ Updating...' : '✅ Mark Resolved'}
+                      </button>
+                    </>
+                  )}
+                  
+                  {issue.status === 'Resolved' && (
+                    <button
+                      onClick={() => handleStatusChange(issue.id, 'Open')}
+                      disabled={updatingStatus[issue.id]}
+                      className="w-full px-3 py-1.5 text-xs font-semibold bg-slate-600 hover:bg-slate-500 disabled:bg-slate-700 text-white rounded transition-colors"
+                    >
+                      {updatingStatus[issue.id] ? '⏳ Updating...' : '🔙 Reopen Issue'}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
