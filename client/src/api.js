@@ -17,7 +17,7 @@ const api = axios.create({
  */
 export const analyzeImage = async (base64Image, lat, lng) => {
   try {
-    const response = await api.post('/detect/analyze', {
+    const response = await api.post('detect/analyze', {
       image: base64Image,
       lat,
       lng
@@ -35,7 +35,7 @@ export const analyzeImage = async (base64Image, lat, lng) => {
  */
 export const analyzeBatch = async (images) => {
   try {
-    const response = await api.post('/detect/batch', { images });
+    const response = await api.post('detect/batch', { images });
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -49,7 +49,7 @@ export const analyzeBatch = async (images) => {
  */
 export const getIssues = async (filters = {}) => {
   try {
-    const response = await api.get('/issues', { params: filters });
+    const response = await api.get('issues', { params: filters });
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -64,7 +64,7 @@ export const getIssues = async (filters = {}) => {
  */
 export const updateIssueStatus = async (issueId, status) => {
   try {
-    const response = await api.patch(`/issues/${issueId}/status`, { status });
+    const response = await api.patch(`issues/${issueId}/status`, { status });
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -77,7 +77,7 @@ export const updateIssueStatus = async (issueId, status) => {
  */
 export const getRoadHealthStats = async () => {
   try {
-    const response = await api.get('/issues/stats/health');
+    const response = await api.get('issues/stats/health');
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
