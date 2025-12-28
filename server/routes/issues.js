@@ -41,6 +41,27 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * GET /api/issues/stats/health
+ * Retrieves road health statistics
+ * MUST be before /:id routes to avoid matching 'stats' as an ID
+ */
+router.get('/stats/health', async (req, res) => {
+  try {
+    const stats = await getRoadHealthStats();
+
+    res.status(200).json({
+      success: true,
+      stats
+    });
+  } catch (error) {
+    console.error('Error in GET /api/issues/stats/health:', error);
+    res.status(500).json({ 
+      error: error.message || 'Failed to retrieve health stats' 
+    });
+  }
+});
+
+/**
  * PATCH /api/issues/:id/status
  * Updates an issue's status
  * Body: { status: 'Open' | 'In Progress' | 'Resolved' }
@@ -68,26 +89,6 @@ router.patch('/:id/status', async (req, res) => {
     console.error('Error in PATCH /api/issues/:id/status:', error);
     res.status(500).json({ 
       error: error.message || 'Failed to update issue status' 
-    });
-  }
-});
-
-/**
- * GET /api/issues/stats/health
- * Retrieves road health statistics
- */
-router.get('/stats/health', async (req, res) => {
-  try {
-    const stats = await getRoadHealthStats();
-
-    res.status(200).json({
-      success: true,
-      stats
-    });
-  } catch (error) {
-    console.error('Error in GET /api/issues/stats/health:', error);
-    res.status(500).json({ 
-      error: error.message || 'Failed to retrieve health stats' 
     });
   }
 });
