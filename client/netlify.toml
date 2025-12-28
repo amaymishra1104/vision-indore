@@ -1,0 +1,8 @@
+[build]
+  publish = "build"
+  command = "echo 'Using pre-built files'"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "no-cache"
